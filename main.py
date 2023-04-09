@@ -3,12 +3,43 @@ import requests
 import multiprocessing
 import time
 import os
+import random
 
 from requests.utils import CaseInsensitiveDict
 
-FPW_URL = 'https://baiduzzzzzz1.28820.com/'
-FPW_HOST = 'baiduzzzzzz1.28820.com'
-FPW_TOKEN = '21a018194adc44e7'
+
+def gen_perfix():
+    dic = [
+        ['moon', 'sun', 'star', 'earth', 'mars', 'jupiter', 'saturn',
+            'uranus', 'neptune', 'pluto', 'mercury', 'venus'],
+        ['river', 'house', 'tree', 'flower', 'grass',
+            'cloud', 'rain', 'snow', 'wind'],
+        ['cat', 'dog', 'bird', 'fish', 'pig', 'cow', 'horse', 'sheep',
+         'monkey', 'mouse', 'rabbit', 'tiger', 'dragon', 'snake'],
+        ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'black',
+            'white', 'gray', 'brown', 'pink', 'gold', 'silver'],
+        ['apple', 'banana', 'watermelon', 'pear', 'grape', 'pineapple', 'strawberry', 'cherry', 'mango', 'lemon', 'lime',
+            'coconut', 'peach', 'melon', 'plum', 'kiwi', 'tomato', 'avocado', 'eggplant', 'potato', 'carrot', 'corn', 'pepper',
+            'broccoli', 'mushroom', 'onion', 'garlic', 'ginger', 'cucumber', 'lettuce', 'spinach', 'cabbage', 'peas', 'bean',
+            'sweetpotato', 'chestnut', 'walnut', 'almond', 'hazelnut', 'cashew', 'pecan', 'pistachio']
+    ]
+    perfix = ''
+    for i in range(5):
+        perfix += dic[i][random.randint(0, len(dic[i])-1)] + \
+            ('-' if i < 4 else '')
+    return perfix
+
+
+if os.getenv('FPW_HOST') == None:
+    host = gen_perfix()
+    host = host + '.28820.com'
+    FPW_url = 'https://' + host + '/'
+    FPW_host = host
+    FPW_token = '21a018194adc44e7'
+else:
+    FPW_url = 'https://' + os.getenv('FPW_HOST') + '/'
+    FPW_host = os.getenv('FPW_HOST')
+    FPW_token = '21a018194adc44e7'
 
 
 def build_header(header):
@@ -31,21 +62,25 @@ def html(http_code, header, body):
 
 def process(req):
     if req['method'] == 'GET':
-        r = requests.get('http://127.0.0.1/'+req['url'], headers=req['header'])
+        r = requests.get('http://127.0.0.1'+req['url'], headers=req['header'], allow_redirects=False)
         return html(r.status_code, r.headers, r.content)
     elif req['method'] == 'POST':
         print(req['body'])
-        r = requests.post('http://127.0.0.1'+req['url'], headers=req['header'], data=req['body'])
+        r = requests.post('http://127.0.0.1' +
+                          req['url'], headers=req['header'], data=req['body'], allow_redirects=False)
         return html(r.status_code, r.headers, r.text)
-    data = '你好，世界！<br /> 现在是 %s' % time.time() + \
-        '<br />来自 %s 的朋友' % req['ip']+'<br />'
-    return html(201, {}, data)
+    else:
+        data = 'Method not allowed'
+    return html(400, {}, data)
 
 
-def fetch_request():
+def fetch_request(args):
+    index, FPW_url, FPW_host, FPW_token = args['index'], args['url'], args['host'], args['token']
+    time.sleep(index)
+
     header = {
-        'fpw-host': FPW_HOST,
-        'fpw-token': FPW_TOKEN,
+        'fpw-host': FPW_host,
+        'fpw-token': FPW_token,
         'user-agent': 'php-worker-v1',
         'content-type': 'application/octet-stream'
     }
@@ -62,7 +97,7 @@ def fetch_request():
             header['fpw-header'] = response['header']
 
         try:
-            r = session.post(FPW_URL, timeout=60, headers=header,
+            r = session.post(FPW_url, timeout=180, headers=header,
                              data=response['body'] if response != None else None)
             if r.status_code == 200:
                 response = None  # 重置
@@ -84,7 +119,7 @@ def fetch_request():
             response = process(req)  # 处理请求
 
         except requests.exceptions.ConnectionError:
-            print('Reconning...')
+            print('Process %d > Reconning...' % index)
             continue
         except Exception as e:
             print('Error: %s' % e)
@@ -92,9 +127,17 @@ def fetch_request():
 
 
 if __name__ == '__main__':
+    print('Start...')
     pool = multiprocessing.Pool(processes=10)
     for i in range(10):
-        pool.apply_async(fetch_request, ())
-        time.sleep(1)
+        config = {
+            'index': i,
+            'url': FPW_url,
+            'host': FPW_host,
+            'token': FPW_token
+        }
+        pool.apply_async(fetch_request, (config,))
+    print('Sccessfully start, run on %s' % FPW_url)
+    time.sleep(100)
     pool.close()
     pool.join()
