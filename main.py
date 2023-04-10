@@ -62,10 +62,10 @@ def html(http_code, header, body):
 
 def process(req):
     if req['method'] == 'GET':
-        r = requests.get('http://127.0.0.1'+req['url'], headers=req['header'], allow_redirects=False)
+        r = requests.get(
+            'http://127.0.0.1'+req['url'], headers=req['header'], allow_redirects=False)
         return html(r.status_code, r.headers, r.content)
     elif req['method'] == 'POST':
-        print(req['body'])
         r = requests.post('http://127.0.0.1' +
                           req['url'], headers=req['header'], data=req['body'], allow_redirects=False)
         return html(r.status_code, r.headers, r.text)
@@ -110,7 +110,7 @@ def fetch_request(args):
             forward_url = r.headers["fpw-url"]
             forward_method = r.headers["fpw-method"]
             user_ip = r.headers["fpw-ip"] if "fpw-ip" in r.headers else forward_header["x-forwarded-for"]
-            print(user_ip + " > " + forward_url)
+            print("%s [%s] > %s" % (user_ip, forward_method, forward_url))
             req = {
                 'method': forward_method,
                 'url': forward_url,
