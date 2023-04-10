@@ -1,5 +1,26 @@
 # fast-python-worker
-白嫖免费的反向代理 feieryun.cn
+## 简介
+**FPW**: **F**ast **P**ython **W**orker / **F**eieryun **P**HP **W**orker
+
+本程序使用了 HTTP 长轮询技术 连接到 飞儿云平台，将本地的 WEB 服务传输到公网，从而实现远程访问本地服务。
+
+默认传输到本地服务 `http://127.0.0.1/<url>`，如果你想修改这个默认的地址，可以修改代码实现。
+
+你可以自定义转发的域名前缀，例如：`xxxxx`，这样就可以通过 `xxxxx.28820.com` 来访问本地的服务。如果未设置环境变量 `FPW_HOST`，则默认自动生成作为域名前缀，如：`moon-flower-snake-red-apple.28820.com`。
+
+服务特点：
+
+1. 每个用户每天没有使用次数和流量限制
+
+2. 可以自定义域名前缀
+
+3. 目前支持 HTTP 协议中的多种请求方式
+   1. 包括但不限于：GET、POST、PUT、DELETE、HEAD、OPTIONS、PATCH、TRACE
+   2. websocket 协议等暂不支持
+
+4. 支持 HTTPS 协议
+
+5. 目前使用 Cloudflare CDN 加速，将来可能会使用其他的 CDN 加速
 
 ## 使用方法
 1. 安装 python
@@ -9,33 +30,22 @@
     ```bash
     pip install requests
     ```
+
 3. 【可选】修改 环境变量
     ```
     FPW_HOST = 'xxxxx.28820.com' # xxxxx为自定义域名前缀
     ```
+
 4. 运行 main.py ~~
     ```bash
     python main.py
     ```
 
-## 简介
-本程序使用了 HTTP 长轮询技术 连接到 飞儿云平台，将本地的 WEB 服务传输到公网，从而实现远程访问本地服务。
-
-你可以自定义转发的域名前缀，例如：`xxxxx`，这样就可以通过 `xxxxx.28820.com` 来访问本地的服务。如果未设置环境变量 `FPW_HOST`，则默认自动生成作为域名前缀，如：`moon-flower-snake-red-apple.28820.com`。
-
-飞儿云的免费反向代理服务特点：
-1. 每个用户每天没有使用次数和流量限制
-2. 可以自定义域名前缀
-3. 目前只支持 HTTP 协议中的多种请求方式
-   1. 包括但不限于：GET、POST、PUT、DELETE、HEAD、OPTIONS、PATCH、TRACE
-4. 支持 HTTPS 协议
-
+5. 访问你的域名 ~~
 ## 服务原理
 下面是本程序的工作原理，如果你想自己实现一个类似的程序，可以参考这个原理。
 
-代码使用的是 python，但是原理是通用的。
-
-FPW: Fast Python Worker / Feieryun PHP Worker
+代码使用的是 Python，但是原理是通用的。
 
 1. 发起 POST 请求到飞儿云的API，创建失败将返回错误信息，创建成功将会保持连接，直到有访客访问这个域名。
    
@@ -105,3 +115,5 @@ FPW: Fast Python Worker / Feieryun PHP Worker
 4. 飞儿云将会将这个请求的响应信息发送给访客，并且这个请求将被挂起，直到有新的访客访问这个域名。
 
 5. 重复 1.3 - 4 步骤，直到程序退出。
+   
+**注意：发起的 POST 请求连接可能会被断开，这时候需要重新发起 POST 请求。如果没有在线的 Worker，访问域名将返回默认的飞儿云页面。**
