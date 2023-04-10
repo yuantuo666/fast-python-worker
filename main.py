@@ -105,14 +105,18 @@ def fetch_request(args):
 
             # 获取请求信息
             fpw_rid = r.headers["fpw-rid"]
-            fpw_header = json.loads(r.headers["fpw-header"])
-            print(fpw_header["x-forwarded-for"] + " > " + fpw_header["url"])
+            forward_header = json.loads(r.headers["fpw-header"])
+
+            forward_url = r.headers["fpw-url"]
+            forward_method = r.headers["fpw-method"]
+            user_ip = r.headers["fpw-ip"] if "fpw-ip" in r.headers else forward_header["x-forwarded-for"]
+            print(user_ip + " > " + forward_url)
             req = {
-                'method': fpw_header["method"],
-                'url': fpw_header["url"],
-                'header': fpw_header,
+                'method': forward_method,
+                'url': forward_url,
+                'header': forward_header,
                 'body': r.content,
-                'ip': fpw_header["x-forwarded-for"],
+                'ip': user_ip,
                 'fpw_rid': fpw_rid
             }
 
