@@ -119,7 +119,7 @@ def fetch_request(args):
             response = process(req)  # 处理请求
 
         except requests.exceptions.ConnectionError:
-            print('Process %d > Reconning...' % index)
+            print('Process %d > Reconning...' % index, flush=True)
             continue
         except Exception as e:
             print('Error: %s' % e)
