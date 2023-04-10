@@ -1,4 +1,7 @@
-# fast-python-worker
+# Fast-Python-Worker
+
+[English](README-EN.md) | [简体中文](README.md)
+
 ## 简介
 **FPW**: **F**ast **P**ython **W**orker / **F**eieryun **P**HP **W**orker
 
