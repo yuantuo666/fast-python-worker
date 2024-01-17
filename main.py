@@ -33,7 +33,7 @@ def gen_perfix():
 if os.getenv('FPW_HOST') == None:
     host = gen_perfix()
     host = host + '.28820.com'
-    FPW_url = 'https://' + host + '/'
+    FPW_url = 'http://' + host + '/server-client'
     FPW_host = host
     FPW_token = '21a018194adc44e7'
 else:
@@ -102,6 +102,12 @@ def fetch_request(args):
             if r.status_code == 200:
                 response = None  # 重置
                 req = None  # 重置
+
+            # print("Process %d > %s" % (index, r))
+
+            if "fpw-rid" not in r.headers:
+                print("Error: NOT FOUND fpw-rid %s" % r.text)
+                continue
 
             # 获取请求信息
             fpw_rid = r.headers["fpw-rid"]
